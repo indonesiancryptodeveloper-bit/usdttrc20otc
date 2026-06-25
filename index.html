@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offchain OTC Market</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .balance-card {
+            background: linear-gradient(135deg, #161b22 0%, #1f242c 100%);
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .balance-amount {
+            color: #2ec4b6;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #30363d;
+            font-family: monospace;
+        }
+        th {
+            background-color: #1f242c;
+            color: #f0f6fc;
+        }
+        .text-green { color: #238636; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="balance-card">
+            <div style="color: #8b949e; font-size: 0.9rem; letter-spacing: 1px;">TOTAL OTC LIQUIDITY</div>
+            <div class="balance-amount">$5.699.999,00</div>
+            <div style="color: #8b949e; font-size: 0.85rem;">USDT TRC20 Ready Pool</div>
+        </div>
+
+        <h3 style="color: #f0f6fc; margin-bottom: 5px;">Live Network Activity</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Transaction Hash</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody id="otc-logs-table">
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #8b949e;">Connecting to Tron Network...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const TRONSCAN_API = "https://apilist.tronscan.org/api/token_trc20/transfers";
+        const CONTRACT_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        const MIN_AMOUNT = 10000; // Logika filter $10K tetap berjalan di background
+
+        async function fetchOTCLogs() {
+            try {
+                const response = await fetch(`${TRONSCAN_API}?limit=40&contract_address=${CONTRACT_ADDRESS}`);
+                const data = await response.json();
+                
+                // Menyaring data secara diam-diam: Hanya memproses transaksi >= 10,000
+                const whaleTransfers = data.token_transfers.filter(tx => {
+                    const amount = parseFloat(tx.quant) / 1000000; // Konversi desimal TRON USDT
+                    return amount >= MIN_AMOUNT;
+                });
+
+                renderTable(whaleTransfers);
+            } catch (error) {
+                console.error("Error fetching data from Tronscan:", error);
+            }
+        }
+
+        function renderTable(transactions) {
+            const tableBody = document.getElementById("otc-logs-table");
+            tableBody.innerHTML = "";
+
+            if (transactions.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No recent large transactions found.</td></tr>`;
+                return;
+            }
+
+            transactions.forEach(tx => {
+                const amount = (parseFloat(tx.quant) / 1000000).toLocaleString('en-US', { minimumFractionDigits: 2 });
+                const shortTx = tx.transaction_id.substring(0, 12) + "...";
+                const shortFrom = tx.from_address.substring(0, 8) + "...";
+                const shortTo = tx.to_address.substring(0, 8) + "...";
+
+                const row = `
+                    <tr>
+                        <td style="color: #58a6ff;">${shortTx}</td>
+                        <td>${shortFrom}</td>
+                        <td>${shortTo}</td>
+                        <td class="text-green">${amount} USDT</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // Jalankan fungsi saat halaman selesai dimuat
+        fetchOTCLogs();
+        // Refresh otomatis setiap 30 detik agar data selalu segar
+        setInterval(fetchOTCLogs, 30000);
+    </script>
+</body>
+</html>
