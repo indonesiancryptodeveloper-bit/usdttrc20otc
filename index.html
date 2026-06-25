@@ -22,7 +22,7 @@
             border-radius: 8px;
             padding: 25px;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         .balance-amount {
             color: #2ec4b6;
@@ -30,10 +30,87 @@
             font-weight: bold;
             margin: 10px 0;
         }
+        
+        /* Gaya Komponen Wallet Penerima */
+        .payment-section {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            background-color: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .tab-btn.active {
+            background-color: #238636;
+            color: white;
+            border-color: #2ea44f;
+        }
+        .wallet-content {
+            display: none;
+            align-items: center;
+            gap: 20px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .wallet-content.active {
+            display: flex;
+        }
+        .qr-box img {
+            width: 130px;
+            height: 130px;
+            border-radius: 6px;
+            border: 4px solid white;
+        }
+        .address-box {
+            flex-grow: 1;
+        }
+        .address-input-group {
+            display: flex;
+            margin-top: 8px;
+        }
+        .address-text {
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            padding: 10px;
+            border-radius: 6px 0 0 6px;
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: #58a6ff;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .copy-btn {
+            background-color: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            border-left: none;
+            padding: 0 15px;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .copy-btn:hover {
+            background-color: #30363d;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
             background-color: #161b22;
             border: 1px solid #30363d;
             border-radius: 8px;
@@ -50,6 +127,11 @@
             color: #f0f6fc;
         }
         .text-green { color: #238636; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -61,7 +143,44 @@
             <div style="color: #8b949e; font-size: 0.85rem;">USDT TRC20 Ready Pool</div>
         </div>
 
-        <h3 style="color: #f0f6fc; margin-bottom: 5px;">Live Network Activity</h3>
+        <div class="payment-section">
+            <h3 style="color: #f0f6fc; margin-top: 0; margin-bottom: 12px; font-size: 1.1rem;">Official Receiving Wallets (USDT TRC20)</h3>
+            
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchWallet('pintu')">Pintu Exchange</button>
+                <button class="tab-btn" onclick="switchWallet('indodax')">Indodax Exchange</button>
+            </div>
+
+            <div id="wallet-pintu" class="wallet-content active">
+                <div class="qr-box">
+                    <img src="USDT TRC20 Pintu Wallet.jpeg" alt="QR Pintu">
+                </div>
+                <div class="address-box">
+                    <span style="color: #8b949e; font-size: 0.85rem;">Pintu Network Deposit Address:</span>
+                    <div class="address-input-group">
+                        <div class="address-text" id="addr-pintu">TAikFWQ32RofHjx47xCZuRamqZKGMzMugv</div>
+                        <button class="copy-btn" onclick="copyAddress('addr-pintu')">Copy</button>
+                    </div>
+                    <span style="color: #ff7b72; font-size: 0.8rem; display: block; margin-top: 6px;">⚠️ Kirim hanya menggunakan jaringan TRON (TRC-20)</span>
+                </div>
+            </div>
+
+            <div id="wallet-indodax" class="wallet-content">
+                <div class="qr-box">
+                    <img src="USDT TRC20 Indodax Wallet.jpeg" alt="QR Indodax">
+                </div>
+                <div class="address-box">
+                    <span style="color: #8b949e; font-size: 0.85rem;">Indodax Network Deposit Address:</span>
+                    <div class="address-input-group">
+                        <div class="address-text" id="addr-indodax">TYM79X46pUisw5NAtg5rKqZ6wWh3z2Uq7K</div>
+                        <button class="copy-btn" onclick="copyAddress('addr-indodax')">Copy</button>
+                    </div>
+                    <span style="color: #ff7b72; font-size: 0.8rem; display: block; margin-top: 6px;">⚠️ Kirim hanya menggunakan jaringan TRON (TRC-20)</span>
+                </div>
+            </div>
+        </div>
+
+        <h3 style="color: #f0f6fc; margin-bottom: 12px; font-size: 1.1rem;">Live Network Activity</h3>
         
         <table>
             <thead>
@@ -81,24 +200,48 @@
     </div>
 
     <script>
+        // Logika Tab Switcher untuk Dompet
+        function switchWallet(exchange) {
+            document.querySelectorAll('.wallet-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            if(exchange === 'pintu') {
+                document.getElementById('wallet-pintu').classList.add('active');
+                event.target.classList.add('active');
+            } else {
+                document.getElementById('wallet-indodax').classList.add('active');
+                event.target.classList.add('active');
+            }
+        }
+
+        // Logika Salin Alamat Otomatis
+        function copyAddress(elementId) {
+            const addressText = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(addressText).then(() => {
+                alert("Alamat berhasil disalin!");
+            }).catch(err => {
+                console.error("Gagal menyalin text: ", err);
+            });
+        }
+
+        // Logika Monitoring Tronscan di Background (Filter >= $10K Senyap)
         const TRONSCAN_API = "https://apilist.tronscan.org/api/token_trc20/transfers";
         const CONTRACT_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-        const MIN_AMOUNT = 10000; // Logika filter $10K tetap berjalan di background
+        const MIN_AMOUNT = 10000;
 
         async function fetchOTCLogs() {
             try {
                 const response = await fetch(`${TRONSCAN_API}?limit=40&contract_address=${CONTRACT_ADDRESS}`);
                 const data = await response.json();
                 
-                // Menyaring data secara diam-diam: Hanya memproses transaksi >= 10,000
                 const whaleTransfers = data.token_transfers.filter(tx => {
-                    const amount = parseFloat(tx.quant) / 1000000; // Konversi desimal TRON USDT
+                    const amount = parseFloat(tx.quant) / 1000000;
                     return amount >= MIN_AMOUNT;
                 });
 
                 renderTable(whaleTransfers);
             } catch (error) {
-                console.error("Error fetching data from Tronscan:", error);
+                console.error("Error fetching data:", error);
             }
         }
 
@@ -107,7 +250,7 @@
             tableBody.innerHTML = "";
 
             if (transactions.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No recent large transactions found.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No recent transactions found.</td></tr>`;
                 return;
             }
 
@@ -117,21 +260,26 @@
                 const shortFrom = tx.from_address.substring(0, 8) + "...";
                 const shortTo = tx.to_address.substring(0, 8) + "...";
 
+                // Tautan aktif ke Tronscan disisipkan di kolom Hash di bawah ini
                 const row = `
                     <tr>
-                        <td style="color: #58a6ff;">${shortTx}</td>
+                        <td>
+                            <a href="https://tronscan.org/#/transaction/${tx.transaction_id}" target="_blank" style="color: #58a6ff; text-decoration: none; font-weight: bold;">
+                                ${shortTx} ↗
+                            </a>
+                        </td>
                         <td>${shortFrom}</td>
                         <td>${shortTo}</td>
-                        <td class="text-green">${amount} USDT</td>
+                        <td class="text-green" style="font-weight: bold;">${amount} USDT</td>
                     </tr>
                 `;
                 tableBody.innerHTML += row;
             });
         }
 
-        // Jalankan fungsi saat halaman selesai dimuat
+        // Eksekusi pertama kali
         fetchOTCLogs();
-        // Refresh otomatis setiap 30 detik agar data selalu segar
+        // Siklus penyegaran data otomatis setiap 30 detik
         setInterval(fetchOTCLogs, 30000);
     </script>
 </body>
